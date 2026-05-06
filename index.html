@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Natal Chart · A Journey Through Synthesis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Questrial&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<style>
+  :root {
+    --bg-deep: #03030d;
+    --bg-soft: #0a0a1f;
+    --neon-cyan: #00f0ff;
+    --neon-magenta: #ff2bd6;
+    --neon-violet: #a855f7;
+    --neon-gold: #ffd84a;
+    --neon-lime: #b6ff3c;
+    --text: #e8e8ff;
+    --text-dim: #8b8bb0;
+    --serif: 'Lora', Georgia, serif;
+    --sans: 'Questrial', system-ui, sans-serif;
+    --glow-cyan: 0 0 12px rgba(0,240,255,.7), 0 0 28px rgba(0,240,255,.35);
+    --glow-magenta: 0 0 12px rgba(255,43,214,.7), 0 0 28px rgba(255,43,214,.35);
+    --glow-gold: 0 0 14px rgba(255,216,74,.85), 0 0 30px rgba(255,216,74,.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(168,85,247,.18) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 35%, rgba(0,240,255,.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(255,43,214,.14) 0%, transparent 55%),
+      var(--bg-deep);
+    background-attachment: fixed;
+    line-height: 1.5;
+  }
+
+  #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ===== HUD ===== */
+  .hud {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; gap: 20px;
+    padding: 16px 28px;
+    background: linear-gradient(180deg, rgba(3,3,13,.85) 0%, rgba(3,3,13,0) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .logo {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .progress-wrap {
+    flex: 1; height: 8px;
+    background: rgba(255,255,255,.06);
+    border-radius: 999px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.08);
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-violet), var(--neon-magenta));
+    box-shadow: 0 0 16px rgba(168,85,247,.6);
+    transition: width .6s cubic-bezier(.2,.8,.2,1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: ''; position: absolute;
+    right: -2px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px;
+    background: #fff; border-radius: 50%;
+    box-shadow: 0 0 16px #fff, 0 0 32px var(--neon-magenta);
+  }
+  .score-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 999px;
+    background: rgba(255,216,74,.08);
+    border: 1px solid rgba(255,216,74,.35);
+    font-family: var(--serif);
+    font-weight: 700;
+    color: var(--neon-gold);
+    box-shadow: var(--glow-gold);
+    min-width: 110px; justify-content: center;
+  }
+  .score-pill svg { width: 18px; height: 18px; filter: drop-shadow(0 0 6px var(--neon-gold)); }
+  #scoreVal { font-variant-numeric: tabular-nums; }
+
+  /* ===== Sections ===== */
+  section {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 100px 6vw 80px;
+  }
+  .container { width: 100%; max-width: 980px; text-align: center; }
+
+  .section-tag {
+    display: inline-block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+    padding: 6px 18px;
+    border: 1px solid rgba(0,240,255,.4);
+    border-radius: 999px;
+    margin-bottom: 32px;
+    box-shadow: var(--glow-cyan);
+    background: rgba(0,240,255,.05);
+  }
+  h1.title, h2.title {
+    font-family: var(--serif);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -.5px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #fff 0%, #e8e8ff 30%, var(--neon-cyan) 70%, var(--neon-magenta) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 24px rgba(168,85,247,.35));
+  }
+  h1.title { font-size: clamp(48px, 9vw, 110px); font-weight: 500; }
+  h2.title { font-size: clamp(34px, 5.5vw, 64px); }
+
+  .subtitle {
+    font-size: clamp(16px, 1.6vw, 19px);
+    color: var(--text-dim);
+    max-width: 680px;
+    margin: 0 auto 36px;
+    line-height: 1.65;
+  }
+  .subtitle em { color: var(--neon-gold); font-style: italic; font-family: var(--serif); }
+
+  /* ===== Hero ===== */
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 18px 44px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+    color: #000;
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .5px;
+    text-decoration: none;
+    cursor: pointer; border: none;
+    box-shadow: 0 0 28px rgba(0,240,255,.6), 0 0 60px rgba(255,43,214,.4);
+    transition: transform .25s, box-shadow .25s;
+  }
+  .hero-cta:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 0 40px rgba(0,240,255,.85), 0 0 90px rgba(255,43,214,.55);
+  }
+  .scroll-hint {
+    position: absolute; bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+    font-family: var(--serif); font-style: italic;
+    font-size: 13px; letter-spacing: 1px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    animation: bounce 2.4s infinite ease-in-out;
+  }
+  .scroll-hint .arrow {
+    width: 22px; height: 22px;
+    border-right: 2px solid var(--neon-cyan);
+    border-bottom: 2px solid var(--neon-cyan);
+    transform: rotate(45deg);
+    box-shadow: 2px 2px 8px var(--neon-cyan);
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translate(-50%, 0); }
+    50% { transform: translate(-50%, 10px); }
+  }
+
+  /* ===== Zodiac wheel SVG decoration ===== */
+  .wheel {
+    width: clamp(220px, 28vw, 340px);
+    height: clamp(220px, 28vw, 340px);
+    margin: 24px auto 36px;
+    animation: rotate 120s linear infinite;
+    filter: drop-shadow(0 0 28px rgba(168,85,247,.5));
+  }
+  @keyframes rotate { to { transform: rotate(360deg); } }
+  .wheel circle, .wheel line { stroke: rgba(255,255,255,.25); }
+  .wheel text { fill: var(--neon-gold); font-family: var(--serif); font-size: 14px; }
+
+  /* ===== Theory block (now expanded) ===== */
+  .theory {
+    background: rgba(255,255,255,.025);
+    border-left: 2px solid var(--neon-cyan);
+    border-radius: 4px;
+    padding: 22px 28px;
+    margin: 22px auto 36px;
+    max-width: 760px;
+    text-align: left;
+    color: var(--text);
+    font-size: 15.5px;
+    font-family: var(--sans);
+    line-height: 1.75;
+  }
+  .theory p + p { margin-top: 12px; }
+  .theory strong {
+    color: var(--neon-gold);
+    font-weight: 600;
+    font-family: var(--serif);
+    font-style: normal;
+  }
+  .theory em {
+    color: var(--neon-cyan);
+    font-style: italic;
+    font-family: var(--serif);
+  }
+  .theory .theory-label {
+    display: block;
+    font-family: var(--serif); font-style: italic;
+    font-size: 12px; letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .task-prompt {
+    font-family: var(--serif);
+    font-size: clamp(20px, 2.4vw, 26px);
+    font-weight: 500;
+    color: #fff;
+    margin: 8px auto 24px;
+    max-width: 720px;
+    line-height: 1.4;
+  }
+  .task-prompt-tag {
+    display: inline-block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px; letter-spacing: 3px;
+    color: var(--neon-magenta);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .task-counter {
+    font-family: var(--serif); font-style: italic;
+    font-size: 14px; color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: rgba(255,255,255,.025);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 24px;
+    padding: 36px 28px;
+    box-shadow: 0 0 48px rgba(168,85,247,.1);
+    backdrop-filter: blur(6px);
+  }
+  .panel.accent {
+    background: linear-gradient(135deg, rgba(168,85,247,.08), rgba(0,240,255,.04));
+    border-color: rgba(168,85,247,.3);
+  }
+
+  /* ===== CP1 — Drag match ===== */
+  .layers-arena { display: grid; gap: 22px; margin: 28px auto; }
+  .chip-pool {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(255,255,255,.025);
+    border: 1px dashed rgba(255,255,255,.15);
+    border-radius: 16px;
+    min-height: 76px;
+  }
+  .chip {
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(0,240,255,.12), rgba(168,85,247,.1));
+    border: 1.5px solid rgba(0,240,255,.45);
+    border-radius: 999px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 15px;
+    cursor: grab;
+    user-select: none;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 14px rgba(0,240,255,.18);
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .chip:active { cursor: grabbing; }
+  .chip .glyph { font-size: 18px; color: var(--neon-gold); }
+  .chip.placed { opacity: .35; cursor: not-allowed; pointer-events: none; }
+  .buckets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 720px) { .buckets { grid-template-columns: 1fr; } }
+  .bucket {
+    background: rgba(255,255,255,.025);
+    border: 1.5px dashed rgba(255,255,255,.18);
+    border-radius: 18px;
+    padding: 18px 16px;
+    min-height: 160px;
+    transition: all .25s;
+    text-align: left;
+  }
+  .bucket .bucket-title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--neon-cyan);
+    margin-bottom: 4px;
+  }
+  .bucket .bucket-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .bucket.drag-over {
+    border-color: var(--neon-cyan);
+    background: rgba(0,240,255,.06);
+    box-shadow: var(--glow-cyan);
+  }
+  .bucket .placed-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bucket .placed-chip {
+    padding: 6px 12px;
+    background: rgba(182,255,60,.12);
+    border: 1px solid var(--neon-lime);
+    border-radius: 999px;
+    color: #fff; font-size: 14px;
+    box-shadow: 0 0 12px rgba(182,255,60,.25);
+  }
+
+  /* ===== CP2 — Big Three orbs ===== */
+  .orbs-row {
+    display: flex; justify-content: center; gap: clamp(20px, 5vw, 60px);
+    margin: 28px 0 24px;
+    flex-wrap: wrap;
+  }
+  .orb {
+    width: clamp(100px, 14vw, 150px);
+    height: clamp(100px, 14vw, 150px);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 52px);
+    color: #fff;
+    transition: transform .25s, box-shadow .25s;
+    user-select: none;
+  }
+  .orb:hover { transform: scale(1.06); }
+  .orb.sun {
+    background: radial-gradient(circle at 35% 30%, #fff5b8, #ffd84a 35%, #ff9c2b 75%, #5a2a00 100%);
+    box-shadow: 0 0 36px var(--neon-gold), 0 0 80px rgba(255,150,30,.45);
+  }
+  .orb.moon {
+    background: radial-gradient(circle at 35% 30%, #f4f4ff, #c4c4e6 40%, #6a6a99 80%, #1a1a3a 100%);
+    box-shadow: 0 0 36px rgba(196,196,230,.6), 0 0 80px rgba(168,85,247,.3);
+  }
+  .orb.asc {
+    background: radial-gradient(circle at 35% 30%, #b5f4ff, #00f0ff 40%, #6028a8 80%, #1a0a3a 100%);
+    box-shadow: 0 0 36px var(--neon-cyan), 0 0 80px rgba(168,85,247,.4);
+  }
+  .orb-label {
+    position: absolute;
+    bottom: -32px;
+    left: 50%; transform: translateX(-50%);
+    font-family: var(--serif);
+    font-size: 16px;
+    font-style: italic;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .orb.correct-pulse { animation: orbpulse .8s ease-out; }
+  .orb.wrong-shake { animation: shake .5s; }
+  @keyframes orbpulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.18); filter: brightness(1.4); }
+    100% { transform: scale(1); filter: brightness(1); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+  .question-card {
+    background: rgba(168,85,247,.06);
+    border: 1px solid rgba(168,85,247,.3);
+    border-radius: 18px;
+    padding: 24px;
+    max-width: 640px;
+    margin: 40px auto 0;
+    font-family: var(--serif);
+    font-size: clamp(18px, 2.2vw, 22px);
+    line-height: 1.5;
+    color: #fff;
+    min-height: 90px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 32px rgba(168,85,247,.2);
+  }
+
+  /* ===== CP3 — Build a sign ===== */
+  .builder { max-width: 720px; margin: 28px auto; }
+  .target-sign {
+    font-family: var(--serif);
+    font-size: clamp(36px, 6vw, 56px);
+    margin-bottom: 8px;
+    color: #fff;
+  }
+  .target-sign .glyph {
+    font-size: clamp(48px, 7vw, 72px);
+    color: var(--neon-gold);
+    text-shadow: var(--glow-gold);
+    margin-right: 12px;
+  }
+  .picker-group { margin: 28px 0; }
+  .picker-label {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .picker-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .picker-btn {
+    padding: 14px 22px;
+    background: rgba(255,255,255,.04);
+    border: 1.5px solid rgba(255,255,255,.15);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    min-width: 110px;
+  }
+  .picker-btn:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0,240,255,.06);
+  }
+  .picker-btn.selected {
+    background: rgba(168,85,247,.14);
+    border-color: var(--neon-violet);
+    box-shadow: 0 0 24px rgba(168,85,247,.4);
+    color: #fff;
+  }
+  .submit-btn {
+    margin-top: 14px;
+    padding: 14px 36px;
+    border-radius: 999px;
+    background: transparent;
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all .25s;
+    box-shadow: var(--glow-cyan);
+  }
+  .submit-btn:hover {
+    background: var(--neon-cyan); color: #000; transform: scale(1.04);
+  }
+  .submit-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ===== CP4 — Element balance reading ===== */
+  .balance-arena { max-width: 720px; margin: 24px auto; }
+  .bars {
+    display: grid; gap: 14px; max-width: 520px;
+    margin: 24px auto 28px;
+  }
+  .bar-row {
+    display: grid; grid-template-columns: 90px 1fr 50px;
+    gap: 14px; align-items: center;
+  }
+  .bar-label {
+    font-family: var(--serif); font-style: italic;
+    font-size: 16px; text-align: right;
+    color: var(--text);
+  }
+  .bar-track {
+    height: 14px; background: rgba(255,255,255,.06);
+    border-radius: 999px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .bar-fill { height: 100%; border-radius: 999px; transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+  .bar-fire .bar-fill { background: linear-gradient(90deg, #ff5e2b, #ffd84a); box-shadow: 0 0 14px rgba(255,94,43,.5); }
+  .bar-earth .bar-fill { background: linear-gradient(90deg, #4a8c3f, #b6ff3c); box-shadow: 0 0 14px rgba(182,255,60,.4); }
+  .bar-air .bar-fill { background: linear-gradient(90deg, #00f0ff, #b5f4ff); box-shadow: 0 0 14px rgba(0,240,255,.5); }
+  .bar-water .bar-fill { background: linear-gradient(90deg, #5a2dc8, #00bfff); box-shadow: 0 0 14px rgba(0,191,255,.5); }
+  .bar-pct {
+    font-family: var(--serif);
+    font-variant-numeric: tabular-nums;
+    color: var(--neon-gold);
+    font-size: 14px;
+    text-align: left;
+  }
+
+  /* ===== Multi-choice answers ===== */
+  .answers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .answer-btn {
+    padding: 18px 20px;
+    background: rgba(255,255,255,.04);
+    border: 1.5px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all .25s;
+    text-align: left;
+    line-height: 1.45;
+  }
+  .answer-btn:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0,240,255,.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 24px rgba(0,240,255,.18);
+  }
+  .answer-btn.correct {
+    background: rgba(182,255,60,.12);
+    border-color: var(--neon-lime);
+    color: #fff;
+    box-shadow: 0 0 28px rgba(182,255,60,.45);
+  }
+  .answer-btn.wrong {
+    background: rgba(255,43,214,.1);
+    border-color: var(--neon-magenta);
+    animation: shake .5s;
+  }
+
+  /* ===== CP5 — Reorder ===== */
+  .sortable {
+    max-width: 600px; margin: 28px auto 18px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .sort-card {
+    padding: 18px 20px;
+    background: linear-gradient(135deg, rgba(0,240,255,.07), rgba(168,85,247,.07));
+    border: 1.5px solid rgba(168,85,247,.3);
+    border-radius: 14px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 16px;
+    cursor: grab;
+    user-select: none;
+    display: flex; align-items: center; gap: 14px;
+    transition: transform .2s, box-shadow .2s;
+    text-align: left;
+  }
+  .sort-card:active { cursor: grabbing; }
+  .sort-card .num {
+    font-family: var(--serif);
+    color: var(--neon-gold);
+    font-size: 22px;
+    font-weight: 600;
+    width: 28px;
+    text-align: center;
+  }
+  .sort-card .body { flex: 1; line-height: 1.4; }
+  .sort-card .body small {
+    display: block;
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-top: 4px;
+    font-style: italic;
+    font-family: var(--serif);
+  }
+  .sort-card.dragging { opacity: .5; }
+  .sort-card.correct {
+    border-color: var(--neon-lime);
+    box-shadow: 0 0 20px rgba(182,255,60,.3);
+  }
+  .sort-card.wrong-pos {
+    border-color: var(--neon-magenta);
+    box-shadow: 0 0 20px rgba(255,43,214,.25);
+  }
+
+  /* ===== Finale ===== */
+  .final-score {
+    font-family: var(--serif);
+    font-size: clamp(80px, 14vw, 180px);
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--neon-gold), var(--neon-magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+    margin: 16px 0;
+    filter: drop-shadow(0 0 32px rgba(255,216,74,.5));
+  }
+  .badges {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    justify-content: center; margin: 28px 0;
+  }
+  .badge {
+    padding: 10px 18px; border-radius: 999px;
+    background: rgba(255,216,74,.08);
+    border: 1px solid rgba(255,216,74,.35);
+    color: var(--neon-gold);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    box-shadow: var(--glow-gold);
+    opacity: 0; transform: scale(.6);
+  }
+  .restart-btn {
+    margin-top: 30px;
+    padding: 14px 32px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.18);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all .25s;
+  }
+  .restart-btn:hover {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+  }
+
+  .xp-pop {
+    position: fixed; pointer-events: none; z-index: 60;
+    font-family: var(--serif); font-weight: 700;
+    font-size: 24px;
+    color: var(--neon-gold);
+    text-shadow: var(--glow-gold);
+  }
+
+  .feedback {
+    margin-top: 16px;
+    font-family: var(--serif); font-style: italic;
+    color: var(--neon-gold); font-size: 15px;
+    min-height: 22px;
+  }
+  .feedback.wrong { color: var(--neon-magenta); }
+
+  /* ===== Fullscreen toggle button ===== */
+  .fullscreen-btn {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 70;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(0,240,255,.18), transparent 60%),
+      linear-gradient(135deg, rgba(3,3,13,.92), rgba(20,8,40,.92));
+    border: 1.5px solid rgba(0,240,255,.45);
+    color: var(--neon-cyan);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+      0 0 20px rgba(0,240,255,.32),
+      0 0 40px rgba(168,85,247,.18),
+      inset 0 0 14px rgba(168,85,247,.18);
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s, border-color .3s;
+  }
+  .fullscreen-btn::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+      var(--neon-cyan), var(--neon-magenta), var(--neon-violet),
+      var(--neon-gold), var(--neon-cyan));
+    z-index: -1;
+    opacity: 0;
+    filter: blur(12px);
+    transition: opacity .3s;
+  }
+  .fullscreen-btn:hover {
+    transform: scale(1.12);
+    border-color: var(--neon-cyan);
+    box-shadow:
+      0 0 30px var(--neon-cyan),
+      0 0 60px rgba(255,43,214,.35),
+      inset 0 0 20px rgba(168,85,247,.3);
+  }
+  .fullscreen-btn:hover::before { opacity: .55; }
+  .fullscreen-btn svg {
+    width: 24px; height: 24px;
+    filter: drop-shadow(0 0 6px var(--neon-cyan));
+    transition: transform .3s;
+  }
+  .fullscreen-btn:hover svg { transform: scale(1.08); }
+  .fullscreen-btn .fs-tooltip {
+    position: absolute;
+    right: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%) translateX(8px);
+    background: rgba(3,3,13,.92);
+    border: 1px solid rgba(0,240,255,.4);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--neon-cyan);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    box-shadow: var(--glow-cyan);
+  }
+  .fullscreen-btn:hover .fs-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+</style>
+</head>
+<body>
+  <canvas id="starfield"></canvas>
+
+  <header class="hud">
+    <div class="logo">Cosmos &middot; quest</div>
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="score-pill">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9 7.5.6-5.7 4.9 1.7 7.3L12 17.8 5.6 21.7l1.7-7.3L1.6 9.5l7.5-.6L12 2z"/></svg>
+      <span id="scoreVal">0</span>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="section-tag">journey &middot; episode 1</div>
+      <h1 class="title" id="heroTitle">The Natal Chart<br>as a Whole System</h1>
+
+      <svg class="wheel" viewBox="-110 -110 220 220" id="zodiacWheel">
+        <circle cx="0" cy="0" r="100" fill="none" stroke-width="1"/>
+        <circle cx="0" cy="0" r="70" fill="none" stroke-width=".7"/>
+        <circle cx="0" cy="0" r="40" fill="none" stroke-width=".5"/>
+      </svg>
+
+      <p class="subtitle">Seven steps from isolated symbols to a full interpretation. Theory and practice in one journey — no fixed predictions, just <em>patterns that repeat</em>, layered on top of each other.</p>
+      <button class="hero-cta" id="heroCta">Begin the journey &nbsp;↓</button>
+    </div>
+    <div class="scroll-hint"><span>scroll down</span><div class="arrow"></div></div>
+  </section>
+
+  <!-- ============ CP1 — Layers ============ -->
+  <section class="checkpoint" id="cp1" data-cp="1">
+    <div class="container">
+      <div class="section-tag">Layer 01 &middot; What / How / Where</div>
+      <h2 class="title">Planet — Sign — House</h2>
+      <div class="theory">
+        <span class="theory-label">theory</span>
+        <p>Every placement in a chart is read across <em>three layers</em>, never just one. Astrology is built on a simple but powerful formula that turns scattered symbols into real meaning.</p>
+        <p>A <strong>planet</strong> describes <em>what</em> is happening — it is the active force, the principle behind the energy: the Sun acts on identity, Mars on drive, Venus on values, Mercury on thought. A <strong>sign</strong> describes <em>how</em> that energy expresses itself — the temperament and style, the flavour of the action; the same planet behaves very differently in different signs. A <strong>house</strong> points to <em>where</em> in life the energy lands — the actual area of experience, like home, partnerships, career, daily work, or friendships.</p>
+        <p>When you read all three layers as one phrase, the placement comes alive. When you read only one or two, the meaning stays flat, contradictory, or generic.</p>
+      </div>
+      <p class="task-prompt-tag">practice</p>
+      <p class="task-prompt">Drag the nine symbols into their three categories.</p>
+
+      <div class="layers-arena">
+        <div class="chip-pool" id="chipPool">
+          <div class="chip" draggable="true" data-cat="what"><span class="glyph">☉</span>Sun</div>
+          <div class="chip" draggable="true" data-cat="how"><span class="glyph">♋</span>Cancer</div>
+          <div class="chip" draggable="true" data-cat="where">10th House</div>
+          <div class="chip" draggable="true" data-cat="how"><span class="glyph">♑</span>Capricorn</div>
+          <div class="chip" draggable="true" data-cat="what"><span class="glyph">♂</span>Mars</div>
+          <div class="chip" draggable="true" data-cat="where">4th House</div>
+          <div class="chip" draggable="true" data-cat="what"><span class="glyph">♀</span>Venus</div>
+          <div class="chip" draggable="true" data-cat="where">7th House</div>
+          <div class="chip" draggable="true" data-cat="how"><span class="glyph">♈</span>Aries</div>
+        </div>
+
+        <div class="buckets">
+          <div class="bucket" data-cat="what">
+            <div class="bucket-title">WHAT — Planets</div>
+            <div class="bucket-desc">The active forces. The thing that acts.</div>
+            <div class="placed-list"></div>
+          </div>
+          <div class="bucket" data-cat="how">
+            <div class="bucket-title">HOW — Signs</div>
+            <div class="bucket-desc">The style and quality of the action.</div>
+            <div class="placed-list"></div>
+          </div>
+          <div class="bucket" data-cat="where">
+            <div class="bucket-title">WHERE — Houses</div>
+            <div class="bucket-desc">The area of life where it shows up.</div>
+            <div class="placed-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="feedback" id="cp1Feedback"></div>
+    </div>
+  </section>
+
+  <!-- ============ CP2 — Big Three ============ -->
+  <section class="checkpoint" id="cp2" data-cp="2">
+    <div class="container">
+      <div class="section-tag">Layer 02 &middot; The Big Three</div>
+      <h2 class="title">The Big Three</h2>
+      <div class="theory">
+        <span class="theory-label">theory</span>
+        <p>The first thing astrologers look at in any chart is the <em>Big Three</em>: <strong>Sun</strong>, <strong>Moon</strong>, and <strong>Ascendant</strong>. Together they form the architecture of personality before any other detail is added.</p>
+        <p>The <strong>Sun</strong> represents your core identity — the essential <em>I am</em>, what shines at the centre of who you are. The <strong>Moon</strong> reflects your inner emotional world: what makes you feel safe, your habits, your private rhythms, the responses that come up when no one is watching. The <strong>Ascendant</strong> (also called the Rising sign) is the sign that was rising on the eastern horizon at your moment of birth — it is the surface others see first, the mask you wear in early encounters.</p>
+        <p>Identity, inner life, outer presentation. Read these three first, and every other placement starts to make sense in context.</p>
+      </div>
+
+      <div class="orbs-row">
+        <div class="orb sun" data-id="sun">☉<span class="orb-label">Sun</span></div>
+        <div class="orb moon" data-id="moon">☽<span class="orb-label">Moon</span></div>
+        <div class="orb asc" data-id="asc">⊕<span class="orb-label">Ascendant</span></div>
+      </div>
+
+      <p class="task-prompt-tag">practice</p>
+      <p class="task-counter" id="bigThreeCounter">5 questions ahead</p>
+      <div class="question-card" id="bigThreeQuestion">Press start to begin the question series.</div>
+      <button class="submit-btn" id="bigThreeStart" style="margin-top:24px">Start the series</button>
+      <div class="feedback" id="cp2Feedback"></div>
+    </div>
+  </section>
+
+  <!-- ============ CP3 — Build a sign ============ -->
+  <section class="checkpoint" id="cp3" data-cp="3">
+    <div class="container">
+      <div class="section-tag">Layer 03 &middot; Element + Modality</div>
+      <h2 class="title">Build a sign</h2>
+      <div class="theory">
+        <span class="theory-label">theory</span>
+        <p>All twelve zodiac signs are built from one simple formula: one <strong>element</strong> plus one <strong>modality</strong>. Together they explain why two signs from the same element can feel so different.</p>
+        <p>The four <em>elements</em> describe what kind of energy is at play: <strong>Fire</strong> (life force, action, inspiration), <strong>Earth</strong> (stability, body, results), <strong>Air</strong> (thought, communication, perspective), <strong>Water</strong> (emotion, intuition, depth). The three <em>modalities</em> describe how that energy moves: <strong>Cardinal</strong> signs initiate and start cycles, <strong>Fixed</strong> signs sustain and hold steady, <strong>Mutable</strong> signs adapt and shift.</p>
+        <p>Four elements × three modalities = exactly twelve unique combinations, no more and no less. This is why Aries (Fire + Cardinal) launches things while Leo (Fire + Fixed) keeps the flame burning — same element, very different rhythm.</p>
+      </div>
+
+      <div class="builder">
+        <p class="task-prompt-tag">practice</p>
+        <p class="task-counter" id="signRound">Round 1 of 3</p>
+        <div class="target-sign" id="signTarget"><span class="glyph">♈</span>Aries</div>
+        <p style="color:var(--text-dim); font-style: italic; font-family: var(--serif); margin-bottom:8px;" id="signHint">Choose the element and modality of this sign.</p>
+
+        <div class="picker-group">
+          <div class="picker-label">Element</div>
+          <div class="picker-row" id="elementPicker">
+            <button class="picker-btn" data-val="fire">Fire</button>
+            <button class="picker-btn" data-val="earth">Earth</button>
+            <button class="picker-btn" data-val="air">Air</button>
+            <button class="picker-btn" data-val="water">Water</button>
+          </div>
+        </div>
+
+        <div class="picker-group">
+          <div class="picker-label">Modality</div>
+          <div class="picker-row" id="modalityPicker">
+            <button class="picker-btn" data-val="cardinal">Cardinal</button>
+            <button class="picker-btn" data-val="fixed">Fixed</button>
+            <button class="picker-btn" data-val="mutable">Mutable</button>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="signSubmit" disabled>Check</button>
+        <div class="feedback" id="signFeedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CP4 — Read the balance ============ -->
+  <section class="checkpoint" id="cp4" data-cp="4">
+    <div class="container">
+      <div class="section-tag">Layer 04 &middot; Reading the profile</div>
+      <h2 class="title">Read the balance</h2>
+      <div class="theory">
+        <span class="theory-label">theory</span>
+        <p>Before you analyse any single planet, scan the overall <em>balance</em> of elements in the chart. A chart with mostly Fire and very little Water reveals a different temperament than one dominated by Water with almost no Fire.</p>
+        <p>This balance — or imbalance — sets the tone of the whole personality before any single placement is even considered. Too much of one element intensifies its theme: passion, rationalism, sentimentality, stubborn realism. Too little of another leaves a gap the person must compensate elsewhere. Reading the balance first gives you the basic temperament; everything else then fills in colour and detail.</p>
+      </div>
+
+      <div class="balance-arena">
+        <p class="task-prompt-tag">practice</p>
+        <p class="task-counter" id="balanceRound">Card 1 of 3</p>
+        <div class="bars" id="balanceBars">
+          <div class="bar-row bar-fire">
+            <div class="bar-label">Fire</div>
+            <div class="bar-track"><div class="bar-fill" data-el="fire" style="width:0%"></div></div>
+            <div class="bar-pct" data-pct="fire">0%</div>
+          </div>
+          <div class="bar-row bar-earth">
+            <div class="bar-label">Earth</div>
+            <div class="bar-track"><div class="bar-fill" data-el="earth" style="width:0%"></div></div>
+            <div class="bar-pct" data-pct="earth">0%</div>
+          </div>
+          <div class="bar-row bar-air">
+            <div class="bar-label">Air</div>
+            <div class="bar-track"><div class="bar-fill" data-el="air" style="width:0%"></div></div>
+            <div class="bar-pct" data-pct="air">0%</div>
+          </div>
+          <div class="bar-row bar-water">
+            <div class="bar-label">Water</div>
+            <div class="bar-track"><div class="bar-fill" data-el="water" style="width:0%"></div></div>
+            <div class="bar-pct" data-pct="water">0%</div>
+          </div>
+        </div>
+
+        <p class="task-prompt" style="font-size:20px; margin-top:10px;">Which description fits this profile best?</p>
+        <div class="answers" id="balanceAnswers"></div>
+        <div class="feedback" id="balanceFeedback"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CP5 — Reorder synthesis steps ============ -->
+  <section class="checkpoint" id="cp5" data-cp="5">
+    <div class="container">
+      <div class="section-tag">Layer 05 &middot; The 5 steps of interpretation</div>
+      <h2 class="title">The interpreter's path</h2>
+      <div class="theory">
+        <span class="theory-label">theory</span>
+        <p>Real interpretation is not about reciting meanings; it is <em>synthesis</em> — weaving the parts into a single living portrait. There is a proven sequence astrologers follow, and skipping a step turns a reading into a list of facts.</p>
+        <p><strong>Structure</strong> comes first: identify the Big Three and the elemental balance to set the basic tone. <strong>Repetition</strong> comes next: spot the themes that show up across multiple placements — these are the loudest signals the chart sends, far more important than any rare detail. <strong>Function</strong> keeps you grounded: every planet has a job and every house has a domain, so always ask "what does this principle do, and where does it act?".</p>
+        <p><strong>Links</strong> combine planet + sign + house + aspects into a single coherent pattern of behaviour. Finally, <strong>Story</strong> translates everything into a narrative about a real person — not a verdict, but a portrait of a life still in motion.</p>
+      </div>
+      <p class="task-prompt-tag">practice</p>
+      <p class="task-prompt">Drag the five steps into the right order — from first to last.</p>
+
+      <div class="sortable" id="sortable"></div>
+      <button class="submit-btn" id="sortSubmit">Check the order</button>
+      <div class="feedback" id="sortFeedback"></div>
+    </div>
+  </section>
+
+  <!-- ============ CP6 — Spot the mistake ============ -->
+  <section class="checkpoint" id="cp6" data-cp="6">
+    <div class="container">
+      <div class="section-tag">Layer 06 &middot; Common pitfalls</div>
+      <h2 class="title">Spot the mistake</h2>
+      <div class="theory">
+        <span class="theory-label">theory</span>
+        <p>Five mistakes haunt nearly every beginner astrologer. Knowing them turns confusion into clarity surprisingly fast.</p>
+        <p><strong>Reading isolated placements</strong> treats each planet as a standalone label, ignoring that charts work like chemistry — meaning emerges from how things react with each other. <strong>Overemphasizing the Sun sign</strong> reduces a whole personality to one factor, the trap pop astrology built its entire industry on. <strong>Neglecting elements and modalities</strong> skips the temperament that frames everything else and leaves the reading in keyword-soup. <strong>Mixing symbolism without function</strong> mashes random associations together until contradictions appear and meaning collapses. <strong>Forcing meanings or predictions</strong> turns potential into fate, demanding certainty from a system that describes patterns, not events.</p>
+        <p>Each mistake comes from the same root: rushing toward an answer instead of seeing the chart as a whole, alive system.</p>
+      </div>
+
+      <p class="task-prompt-tag">practice</p>
+      <p class="task-counter" id="mistakeRound">Case 1 of 3</p>
+      <div class="question-card" id="mistakeCase" style="font-style: italic; min-height:120px;">"…"</div>
+      <p class="task-prompt" style="font-size:18px; margin: 24px 0 16px;">Which mistake is shown here?</p>
+      <div class="answers" id="mistakeAnswers"></div>
+      <div class="feedback" id="mistakeFeedback"></div>
+    </div>
+  </section>
+
+  <!-- ============ CP7 — Boss interpretation ============ -->
+  <section class="checkpoint" id="cp7" data-cp="7">
+    <div class="container">
+      <div class="section-tag">Layer 07 &middot; Final synthesis</div>
+      <h2 class="title">Read the placement</h2>
+      <div class="theory">
+        <span class="theory-label">theory</span>
+        <p>A real reading combines all three layers — <strong>planet</strong>, <strong>sign</strong>, <strong>house</strong> — without falling into any of the five traps. The placement below is a small test of synthesis.</p>
+        <p>Three of the four interpretations look plausible at first glance, but each one demonstrates one of the typical mistakes: confusing keywords without function, reducing to a single factor, or forcing a literal prediction. Only one option weaves all the layers together cleanly and stays in the language of <em>potential</em>, not certainty.</p>
+      </div>
+
+      <div class="panel accent" style="margin-top:20px;">
+        <p style="font-family: var(--serif); font-style: italic; color: var(--text-dim); margin-bottom:12px; font-size:14px;">the placement</p>
+        <p style="font-family: var(--serif); font-size: clamp(28px, 4vw, 38px); color: #fff; line-height:1.3;">
+          <span style="color:var(--neon-gold)">♂ Mars</span> in <span style="color:var(--neon-cyan)">♑ Capricorn</span> in the <span style="color:var(--neon-magenta)">6th house</span>
+        </p>
+      </div>
+
+      <p class="task-prompt-tag" style="margin-top:32px;">practice</p>
+      <p class="task-prompt">Which entry is a real synthesised interpretation?</p>
+      <div class="answers" id="bossAnswers">
+        <button class="answer-btn" data-correct="false">Mars equals aggression, so this person gets into conflicts easily.</button>
+        <button class="answer-btn" data-correct="true">Disciplined drive directed into daily work and routines: this person methodically tackles tasks and builds results through quiet consistency.</button>
+        <button class="answer-btn" data-correct="false">Capricorn is slow and Mars is fast — this contradiction prevents the person from acting at all.</button>
+        <button class="answer-btn" data-correct="false">This year the person will get a promotion at work because Mars sits in the 6th house.</button>
+      </div>
+      <div class="feedback" id="bossFeedback"></div>
+    </div>
+  </section>
+
+  <!-- ============ FINALE ============ -->
+  <section class="finale" id="finale">
+    <div class="container">
+      <div class="section-tag">journey complete</div>
+      <h2 class="title">The chart is read</h2>
+      <div class="final-score"><span id="finalScore">0</span></div>
+      <p class="subtitle">points collected on this journey. You now see the chart as a <em>system</em>, not a list of symbols — three layers, one balance, five steps, five traps avoided.</p>
+      <div class="badges" id="badges">
+        <div class="badge">☉ Holds all three layers</div>
+        <div class="badge">☽ Reads the patterns</div>
+        <div class="badge">⊕ Avoids the five traps</div>
+        <div class="badge">★ Master of synthesis</div>
+      </div>
+      <button class="restart-btn" id="restartBtn">↻ Start the journey again</button>
+    </div>
+  </section>
+
+  <!-- ============ Fullscreen toggle ============ -->
+  <button class="fullscreen-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
+    <span class="fs-tooltip" id="fsTooltip">Enter fullscreen</span>
+    <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 3 21 3 21 9"/>
+      <polyline points="9 21 3 21 3 15"/>
+      <line x1="21" y1="3" x2="14" y2="10"/>
+      <line x1="3" y1="21" x2="10" y2="14"/>
+    </svg>
+  </button>
+
+<script>
+/* ============================================================
+   STARFIELD
+   ============================================================ */
+(() => {
+  const cv = document.getElementById('starfield');
+  const ctx = cv.getContext('2d');
+  let W, H, stars = [], shooters = [];
+  function resize() {
+    W = cv.width = window.innerWidth * devicePixelRatio;
+    H = cv.height = window.innerHeight * devicePixelRatio;
+    cv.style.width = window.innerWidth + 'px';
+    cv.style.height = window.innerHeight + 'px';
+    initStars();
+  }
+  function initStars() {
+    stars = [];
+    const count = Math.floor((W * H) / 9000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.6 * devicePixelRatio + 0.3,
+        a: Math.random() * 0.8 + 0.2,
+        tw: Math.random() * 0.02 + 0.005,
+        ta: Math.random() * Math.PI * 2,
+        layer: Math.random()
+      });
+    }
+  }
+  function spawnShooter() {
+    if (Math.random() < 0.012 && shooters.length < 2) {
+      const fromLeft = Math.random() < 0.5;
+      shooters.push({
+        x: fromLeft ? -50 : W + 50,
+        y: Math.random() * H * 0.6,
+        vx: (fromLeft ? 1 : -1) * (8 + Math.random() * 6) * devicePixelRatio,
+        vy: (2 + Math.random() * 3) * devicePixelRatio,
+        life: 1
+      });
+    }
+  }
+  let scrollOffset = 0;
+  window.addEventListener('scroll', () => { scrollOffset = window.scrollY; });
+  function frame() {
+    ctx.fillStyle = 'rgba(3,3,13,0.55)';
+    ctx.fillRect(0, 0, W, H);
+    for (const s of stars) {
+      s.ta += s.tw;
+      const tw = (Math.sin(s.ta) + 1) / 2;
+      const py = (s.y - scrollOffset * s.layer * 0.4) % H;
+      const yPos = py < 0 ? py + H : py;
+      ctx.beginPath();
+      ctx.arc(s.x, yPos, s.r * (0.6 + tw * 0.6), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${200 + tw * 55}, ${200 + tw * 55}, 255, ${s.a * (0.4 + tw * 0.6)})`;
+      ctx.fill();
+    }
+    spawnShooter();
+    for (let i = shooters.length - 1; i >= 0; i--) {
+      const sh = shooters[i];
+      ctx.strokeStyle = `rgba(255,255,255,${sh.life})`;
+      ctx.lineWidth = 2 * devicePixelRatio;
+      ctx.beginPath();
+      ctx.moveTo(sh.x, sh.y);
+      ctx.lineTo(sh.x - sh.vx * 6, sh.y - sh.vy * 6);
+      ctx.stroke();
+      const grd = ctx.createRadialGradient(sh.x, sh.y, 0, sh.x, sh.y, 30 * devicePixelRatio);
+      grd.addColorStop(0, `rgba(0,240,255,${sh.life * 0.8})`);
+      grd.addColorStop(1, 'rgba(0,240,255,0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(sh.x, sh.y, 30 * devicePixelRatio, 0, Math.PI * 2);
+      ctx.fill();
+      sh.x += sh.vx; sh.y += sh.vy; sh.life -= 0.012;
+      if (sh.life <= 0 || sh.x < -100 || sh.x > W + 100) shooters.splice(i, 1);
+    }
+    requestAnimationFrame(frame);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  frame();
+})();
+
+/* ============================================================
+   ZODIAC WHEEL
+   ============================================================ */
+(() => {
+  const wheel = document.getElementById('zodiacWheel');
+  if (!wheel) return;
+  const glyphs = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+  const ns = 'http://www.w3.org/2000/svg';
+  for (let i = 0; i < 12; i++) {
+    const angle = (i * 30) - 90;
+    const rad = (angle * Math.PI) / 180;
+    const x1 = Math.cos(rad) * 40, y1 = Math.sin(rad) * 40;
+    const x2 = Math.cos(rad) * 100, y2 = Math.sin(rad) * 100;
+    const ln = document.createElementNS(ns, 'line');
+    ln.setAttribute('x1', x1); ln.setAttribute('y1', y1);
+    ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
+    ln.setAttribute('stroke-width', '.5');
+    wheel.appendChild(ln);
+    const midRad = (((i * 30) + 15 - 90) * Math.PI) / 180;
+    const tx = Math.cos(midRad) * 85;
+    const ty = Math.sin(midRad) * 85;
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', tx); t.setAttribute('y', ty + 5);
+    t.setAttribute('text-anchor', 'middle');
+    t.textContent = glyphs[i];
+    wheel.appendChild(t);
+  }
+})();
+
+/* ============================================================
+   SCORE / PROGRESS
+   ============================================================ */
+const TOTAL_CHECKPOINTS = 7;
+const state = { score: 0 };
+function setScore(target) {
+  const obj = { v: state.score };
+  gsap.to(obj, {
+    v: target, duration: 0.8, ease: 'power2.out',
+    onUpdate: () => { document.getElementById('scoreVal').textContent = Math.round(obj.v); },
+    onComplete: () => { state.score = target; }
+  });
+}
+function addScore(n, originEl) {
+  setScore(state.score + n);
+  popXp(n, originEl);
+}
+function popXp(n, el) {
+  const pop = document.createElement('div');
+  pop.className = 'xp-pop';
+  pop.textContent = (n >= 0 ? '+' : '') + n;
+  if (n < 0) pop.style.color = 'var(--neon-magenta)';
+  document.body.appendChild(pop);
+  let x = window.innerWidth / 2, y = window.innerHeight / 2;
+  if (el && el.getBoundingClientRect) {
+    const r = el.getBoundingClientRect();
+    x = r.left + r.width / 2; y = r.top + r.height / 2;
+  }
+  pop.style.left = x + 'px';
+  pop.style.top = y + 'px';
+  gsap.fromTo(pop,
+    { y: 0, opacity: 0, scale: .6 },
+    { y: -80, opacity: 1, scale: 1.2, duration: 0.4, ease: 'back.out(2)' });
+  gsap.to(pop, { opacity: 0, y: -160, duration: 0.6, delay: 0.5, onComplete: () => pop.remove() });
+}
+function updateProgress(cp) {
+  const pct = (cp / TOTAL_CHECKPOINTS) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+/* ============================================================
+   FIREWORKS
+   ============================================================ */
+function smallBurst(x, y) {
+  confetti({
+    particleCount: 22, spread: 60, startVelocity: 24,
+    origin: { x: x / window.innerWidth, y: y / window.innerHeight },
+    colors: ['#00f0ff', '#ff2bd6', '#ffd84a', '#a855f7', '#ffffff']
+  });
+}
+function fireworkExplosion() {
+  const positions = [{ x: 0.3, y: 0.4 }, { x: 0.7, y: 0.4 }, { x: 0.5, y: 0.55 }];
+  positions.forEach((p, i) => {
+    setTimeout(() => {
+      confetti({
+        particleCount: 55, spread: 360, startVelocity: 30,
+        origin: p,
+        colors: ['#00f0ff', '#ff2bd6', '#ffd84a', '#a855f7', '#ffffff'],
+        scalar: 1.1, ticks: 180
+      });
+    }, i * 240);
+  });
+}
+function epicFinale() {
+  const dur = 4000;
+  const end = Date.now() + dur;
+  (function loop() {
+    confetti({ particleCount: 3, angle: 60 + Math.random()*60, spread: 70,
+      origin: { x: Math.random()*0.4, y: Math.random()*0.4 + 0.2 },
+      colors: ['#00f0ff', '#ff2bd6', '#ffd84a'] });
+    confetti({ particleCount: 3, angle: 120 + Math.random()*60, spread: 70,
+      origin: { x: 0.6 + Math.random()*0.4, y: Math.random()*0.4 + 0.2 },
+      colors: ['#a855f7', '#ffffff'] });
+    if (Date.now() < end) requestAnimationFrame(loop);
+  })();
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      confetti({
+        particleCount: 90, spread: 360, startVelocity: 40,
+        origin: { x: 0.3 + Math.random()*0.4, y: 0.2 + Math.random()*0.3 },
+        colors: ['#00f0ff', '#ff2bd6', '#ffd84a', '#a855f7', '#ffffff'], scalar: 1.2
+      });
+    }, i * 1200);
+  }
+}
+
+/* ============================================================
+   GSAP scroll reveals
+   ============================================================ */
+gsap.registerPlugin(ScrollTrigger);
+
+const heroTitle = document.getElementById('heroTitle');
+gsap.from(heroTitle, { opacity: 0, y: 40, duration: 1.2, ease: 'power3.out', delay: 0.2 });
+
+document.querySelectorAll('section.checkpoint, section.finale').forEach(sec => {
+  const el = sec.querySelector('.container');
+  gsap.from(el, {
+    scrollTrigger: { trigger: sec, start: 'top 75%', toggleActions: 'play none none reverse' },
+    y: 60, opacity: 0, duration: 1, ease: 'power3.out'
+  });
+  const tag = sec.querySelector('.section-tag');
+  if (tag) gsap.from(tag, {
+    scrollTrigger: { trigger: sec, start: 'top 80%' },
+    scale: 0.7, opacity: 0, duration: 0.6, ease: 'back.out(2)'
+  });
+});
+
+document.getElementById('heroCta').addEventListener('click', () => {
+  document.getElementById('cp1').scrollIntoView({ behavior: 'smooth' });
+});
+function scrollNext(cpNum) {
+  setTimeout(() => {
+    const next = document.getElementById('cp' + cpNum);
+    if (next) next.scrollIntoView({ behavior: 'smooth' });
+  }, 1300);
+}
+function unlockProgress(cp) { updateProgress(cp); }
+
+/* ============================================================
+   CP1 — Drag match
+   ============================================================ */
+(function setupCp1() {
+  let dragData = null;
+  let placed = 0;
+  const total = 9;
+  document.querySelectorAll('#cp1 .chip').forEach(c => {
+    c.addEventListener('dragstart', e => {
+      dragData = c;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', c.dataset.cat || '');
+      c.style.opacity = '0.4';
+    });
+    c.addEventListener('dragend', () => { c.style.opacity = ''; });
+  });
+  document.querySelectorAll('#cp1 .bucket').forEach(b => {
+    b.addEventListener('dragover', e => { e.preventDefault(); b.classList.add('drag-over'); });
+    b.addEventListener('dragleave', () => b.classList.remove('drag-over'));
+    b.addEventListener('drop', e => {
+      e.preventDefault();
+      b.classList.remove('drag-over');
+      if (!dragData) return;
+      const cat = b.dataset.cat;
+      const fb = document.getElementById('cp1Feedback');
+      if (dragData.dataset.cat === cat) {
+        const item = document.createElement('div');
+        item.className = 'placed-chip';
+        item.innerHTML = dragData.innerHTML;
+        b.querySelector('.placed-list').appendChild(item);
+        dragData.classList.add('placed');
+        const r = b.getBoundingClientRect();
+        smallBurst(r.left + r.width/2, r.top + r.height/2);
+        addScore(8, b);
+        fb.textContent = '✓ correct';
+        fb.classList.remove('wrong');
+        placed++;
+        if (placed === total) {
+          setTimeout(fireworkExplosion, 200);
+          addScore(20, b);
+          fb.textContent = '★ all nine in place. The three layers are now clear.';
+          unlockProgress(1);
+          scrollNext(2);
+        }
+      } else {
+        gsap.fromTo(b, { x: 0 }, { x: 0, keyframes: [{ x: -8 }, { x: 8 }, { x: 0 }], duration: 0.4 });
+        addScore(-3, b);
+        fb.textContent = '✗ wrong category, try again';
+        fb.classList.add('wrong');
+      }
+      dragData = null;
+    });
+  });
+})();
+
+/* ============================================================
+   CP2 — Big Three series
+   ============================================================ */
+(function setupCp2() {
+  const questions = [
+    { q: 'What do you show people in a first encounter — your "cover"?', a: 'asc' },
+    { q: 'What makes you feel safe — your inner emotional needs?', a: 'moon' },
+    { q: 'Who are you at the very core — the central self?', a: 'sun' },
+    { q: 'What comes alive when you are alone, in silence — your inner world?', a: 'moon' },
+    { q: 'What facade do you build in a new group — how others read you first?', a: 'asc' }
+  ];
+  let idx = 0;
+  let answered = false;
+  const counter = document.getElementById('bigThreeCounter');
+  const qBox = document.getElementById('bigThreeQuestion');
+  const startBtn = document.getElementById('bigThreeStart');
+  const fb = document.getElementById('cp2Feedback');
+
+  function showQuestion() {
+    if (idx >= questions.length) {
+      qBox.textContent = '★ series complete. The Big Three is anchored.';
+      counter.textContent = '';
+      setTimeout(fireworkExplosion, 200);
+      addScore(15, qBox);
+      unlockProgress(2);
+      scrollNext(3);
+      return;
+    }
+    counter.textContent = `Question ${idx+1} of ${questions.length}`;
+    qBox.textContent = questions[idx].q;
+    answered = false;
+    fb.textContent = '';
+  }
+  startBtn.addEventListener('click', () => {
+    startBtn.style.display = 'none';
+    showQuestion();
+  });
+  document.querySelectorAll('#cp2 .orb').forEach(orb => {
+    orb.addEventListener('click', () => {
+      if (answered || idx >= questions.length || startBtn.style.display !== 'none') return;
+      const expected = questions[idx].a;
+      const r = orb.getBoundingClientRect();
+      if (orb.dataset.id === expected) {
+        orb.classList.add('correct-pulse');
+        setTimeout(() => orb.classList.remove('correct-pulse'), 800);
+        smallBurst(r.left + r.width/2, r.top + r.height/2);
+        addScore(12, orb);
+        fb.textContent = '✓ on point';
+        fb.classList.remove('wrong');
+        answered = true;
+        idx++;
+        setTimeout(showQuestion, 900);
+      } else {
+        orb.classList.add('wrong-shake');
+        setTimeout(() => orb.classList.remove('wrong-shake'), 600);
+        addScore(-3, orb);
+        fb.textContent = '✗ not quite. Remember: Sun is the core, Moon is inner, Ascendant is the surface.';
+        fb.classList.add('wrong');
+      }
+    });
+  });
+})();
+
+/* ============================================================
+   CP3 — Build a sign
+   ============================================================ */
+(function setupCp3() {
+  const rounds = [
+    { sign: 'Aries', glyph: '♈', element: 'fire', modality: 'cardinal',
+      hint: 'First sign of the zodiac, opens spring. Impulse and initiation.' },
+    { sign: 'Taurus', glyph: '♉', element: 'earth', modality: 'fixed',
+      hint: 'Stability, body, the love of what lasts.' },
+    { sign: 'Gemini', glyph: '♊', element: 'air', modality: 'mutable',
+      hint: 'Curiosity, flexibility, a constant flow of ideas.' }
+  ];
+  let i = 0;
+  let chosenEl = null, chosenMod = null;
+  const target = document.getElementById('signTarget');
+  const hintEl = document.getElementById('signHint');
+  const counter = document.getElementById('signRound');
+  const submit = document.getElementById('signSubmit');
+  const fb = document.getElementById('signFeedback');
+  const elBtns = document.querySelectorAll('#elementPicker .picker-btn');
+  const modBtns = document.querySelectorAll('#modalityPicker .picker-btn');
+
+  function load() {
+    if (i >= rounds.length) {
+      target.innerHTML = '★ all three signs built!';
+      hintEl.textContent = '';
+      counter.textContent = '';
+      submit.style.display = 'none';
+      setTimeout(fireworkExplosion, 200);
+      addScore(20, submit);
+      unlockProgress(3);
+      scrollNext(4);
+      return;
+    }
+    const r = rounds[i];
+    target.innerHTML = `<span class="glyph">${r.glyph}</span>${r.sign}`;
+    hintEl.textContent = r.hint;
+    counter.textContent = `Round ${i+1} of ${rounds.length}`;
+    chosenEl = null; chosenMod = null;
+    elBtns.forEach(b => b.classList.remove('selected'));
+    modBtns.forEach(b => b.classList.remove('selected'));
+    submit.disabled = true;
+    fb.textContent = '';
+  }
+  function checkReady() { submit.disabled = !(chosenEl && chosenMod); }
+  elBtns.forEach(b => b.addEventListener('click', () => {
+    elBtns.forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected'); chosenEl = b.dataset.val; checkReady();
+  }));
+  modBtns.forEach(b => b.addEventListener('click', () => {
+    modBtns.forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected'); chosenMod = b.dataset.val; checkReady();
+  }));
+  submit.addEventListener('click', () => {
+    if (!chosenEl || !chosenMod) return;
+    const r = rounds[i];
+    if (chosenEl === r.element && chosenMod === r.modality) {
+      const rect = submit.getBoundingClientRect();
+      smallBurst(rect.left + rect.width/2, rect.top);
+      addScore(25, submit);
+      fb.textContent = `✓ ${r.sign} = ${labelEl(r.element)} + ${labelMod(r.modality)}`;
+      fb.classList.remove('wrong');
+      i++;
+      setTimeout(load, 1100);
+    } else {
+      addScore(-5, submit);
+      fb.classList.add('wrong');
+      let msg = '✗ ';
+      if (chosenEl !== r.element) msg += `wrong element (it's not ${labelEl(chosenEl)}). `;
+      if (chosenMod !== r.modality) msg += `wrong modality. `;
+      fb.textContent = msg;
+    }
+  });
+  function labelEl(v){ return {fire:'Fire', earth:'Earth', air:'Air', water:'Water'}[v]; }
+  function labelMod(v){ return {cardinal:'Cardinal', fixed:'Fixed', mutable:'Mutable'}[v]; }
+  load();
+})();
+
+/* ============================================================
+   CP4 — Read the balance
+   ============================================================ */
+(function setupCp4() {
+  const cases = [
+    {
+      bars: { fire: 60, earth: 10, air: 20, water: 10 },
+      correct: 1,
+      options: [
+        'A calm, grounded person who builds results slowly through routine.',
+        'An impulsive, charged person, drawn to starts and new adventures; discipline may be lacking.',
+        'An intellectual living in thoughts and discussions, keeping distance from emotion.',
+        'A deeply feeling, intuitive person oriented toward emotional bonds.'
+      ]
+    },
+    {
+      bars: { fire: 5, earth: 15, air: 15, water: 65 },
+      correct: 3,
+      options: [
+        'A leader of action, the first to jump into new ventures.',
+        'A systematic rationalist relying purely on logic.',
+        'A steady practitioner who loves material results and slow growth.',
+        'An emotional, intuitive person who reads atmospheres and lives through feelings.'
+      ]
+    },
+    {
+      bars: { fire: 20, earth: 55, air: 15, water: 10 },
+      correct: 0,
+      options: [
+        'A practical realist: values stability, consistency, and concrete results.',
+        'A creative dreamer who gets lost in fantasy and rarely follows through.',
+        'A social communicator living in ideas and exchange of thoughts.',
+        'An emotional intuitive who makes decisions with the heart.'
+      ]
+    }
+  ];
+  let i = 0, answered = false;
+  const counter = document.getElementById('balanceRound');
+  const ansBox = document.getElementById('balanceAnswers');
+  const fb = document.getElementById('balanceFeedback');
+
+  function load() {
+    if (i >= cases.length) {
+      counter.textContent = '★ the balance speaks at first glance';
+      ansBox.innerHTML = '';
+      setTimeout(fireworkExplosion, 200);
+      addScore(20, counter);
+      unlockProgress(4);
+      scrollNext(5);
+      return;
+    }
+    const c = cases[i];
+    counter.textContent = `Card ${i+1} of ${cases.length}`;
+    setBars(c.bars);
+    ansBox.innerHTML = '';
+    answered = false;
+    c.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        if (answered) return;
+        if (idx === c.correct) {
+          answered = true;
+          btn.classList.add('correct');
+          const r = btn.getBoundingClientRect();
+          smallBurst(r.left + r.width/2, r.top + r.height/2);
+          addScore(25, btn);
+          fb.textContent = '✓ profile read correctly';
+          fb.classList.remove('wrong');
+          i++;
+          setTimeout(load, 1100);
+        } else {
+          btn.classList.add('wrong');
+          addScore(-4, btn);
+          fb.textContent = '✗ this description does not match the balance';
+          fb.classList.add('wrong');
+          setTimeout(() => btn.classList.remove('wrong'), 600);
+        }
+      });
+      ansBox.appendChild(btn);
+    });
+  }
+  function setBars(b) {
+    Object.keys(b).forEach(k => {
+      const fill = document.querySelector(`#balanceBars .bar-fill[data-el="${k}"]`);
+      const pct = document.querySelector(`#balanceBars .bar-pct[data-pct="${k}"]`);
+      if (fill) fill.style.width = b[k] + '%';
+      if (pct) {
+        const obj = { v: 0 };
+        gsap.to(obj, { v: b[k], duration: 1.0, ease: 'power2.out',
+          onUpdate: () => { pct.textContent = Math.round(obj.v) + '%'; }
+        });
+      }
+    });
+  }
+  ScrollTrigger.create({
+    trigger: '#cp4', start: 'top 60%', once: true,
+    onEnter: () => load()
+  });
+})();
+
+/* ============================================================
+   CP5 — Reorder synthesis steps
+   ============================================================ */
+(function setupCp5() {
+  const steps = [
+    { id: 1, title: 'Structure', desc: 'Sun, Moon, Ascendant + balance of elements and modalities' },
+    { id: 2, title: 'Repetition', desc: 'Themes that show up across multiple parts of the chart' },
+    { id: 3, title: 'Function', desc: 'What each planet does and what each house governs' },
+    { id: 4, title: 'Links', desc: 'Planet + sign + house + aspects merge into a single pattern' },
+    { id: 5, title: 'Story', desc: 'Symbols turn into a living narrative about the person' }
+  ];
+  const shuffled = [...steps].sort(() => Math.random() - 0.5);
+  const list = document.getElementById('sortable');
+  shuffled.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'sort-card';
+    card.draggable = true;
+    card.dataset.id = s.id;
+    card.innerHTML = `<div class="num">·</div><div class="body"><strong>${s.title}</strong><small>${s.desc}</small></div>`;
+    list.appendChild(card);
+  });
+  list.querySelectorAll('.sort-card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.id || '');
+    });
+    card.addEventListener('dragend', () => { card.classList.remove('dragging'); });
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      const dragging = list.querySelector('.dragging');
+      if (!dragging || dragging === card) return;
+      const rect = card.getBoundingClientRect();
+      const after = (e.clientY - rect.top) > rect.height / 2;
+      list.insertBefore(dragging, after ? card.nextSibling : card);
+    });
+  });
+  function refreshNums() {
+    list.querySelectorAll('.sort-card').forEach((c, i) => {
+      c.querySelector('.num').textContent = (i + 1);
+    });
+  }
+  refreshNums();
+  const observer = new MutationObserver(refreshNums);
+  observer.observe(list, { childList: true });
+
+  document.getElementById('sortSubmit').addEventListener('click', () => {
+    const order = [...list.querySelectorAll('.sort-card')].map(c => parseInt(c.dataset.id));
+    const correct = [1,2,3,4,5];
+    let allRight = true;
+    order.forEach((id, i) => {
+      const card = list.querySelectorAll('.sort-card')[i];
+      if (id === correct[i]) card.classList.add('correct');
+      else { card.classList.add('wrong-pos'); allRight = false; }
+    });
+    const fb = document.getElementById('sortFeedback');
+    if (allRight) {
+      addScore(60, document.getElementById('sortSubmit'));
+      setTimeout(fireworkExplosion, 200);
+      fb.textContent = '★ perfect synthesis sequence';
+      fb.classList.remove('wrong');
+      unlockProgress(5);
+      scrollNext(6);
+    } else {
+      const correctCount = order.filter((id, i) => id === correct[i]).length;
+      addScore(correctCount * 10 - 10, document.getElementById('sortSubmit'));
+      fb.classList.add('wrong');
+      fb.textContent = `${correctCount} of 5 in place. Try again: structure first, then patterns, then functions, then links, finally — the story.`;
+      setTimeout(() => {
+        list.querySelectorAll('.sort-card').forEach(c => {
+          c.classList.remove('correct'); c.classList.remove('wrong-pos');
+        });
+      }, 2500);
+    }
+  });
+})();
+
+/* ============================================================
+   CP6 — Spot the mistake
+   ============================================================ */
+(function setupCp6() {
+  const mistakes = [
+    'Reading isolated placements',
+    'Overemphasizing the Sun',
+    'Neglecting elements and modalities',
+    'Mixing symbolism without function',
+    'Forcing meanings or predictions'
+  ];
+  const cases = [
+    {
+      quote: '"I have Mars in Gemini, so I\'m a talkative person — there\'s nothing else to think about here."',
+      correct: 0
+    },
+    {
+      quote: '"I\'m a Scorpio — so I\'m jealous, secretive, and intense. That\'s the whole picture of me."',
+      correct: 1
+    },
+    {
+      quote: '"This Saturn square guarantees the person won\'t marry before 35. I see it clearly in the chart."',
+      correct: 4
+    }
+  ];
+  let i = 0, answered = false;
+  const counter = document.getElementById('mistakeRound');
+  const caseEl = document.getElementById('mistakeCase');
+  const ansBox = document.getElementById('mistakeAnswers');
+  const fb = document.getElementById('mistakeFeedback');
+  function load() {
+    if (i >= cases.length) {
+      counter.textContent = '★ you spot the traps';
+      caseEl.textContent = '';
+      ansBox.innerHTML = '';
+      setTimeout(fireworkExplosion, 200);
+      addScore(20, counter);
+      unlockProgress(6);
+      scrollNext(7);
+      return;
+    }
+    const c = cases[i];
+    counter.textContent = `Case ${i+1} of ${cases.length}`;
+    caseEl.textContent = c.quote;
+    ansBox.innerHTML = '';
+    answered = false;
+    mistakes.forEach((m, idx) => {
+      const b = document.createElement('button');
+      b.className = 'answer-btn';
+      b.textContent = m;
+      b.addEventListener('click', () => {
+        if (answered) return;
+        if (idx === c.correct) {
+          answered = true;
+          b.classList.add('correct');
+          const r = b.getBoundingClientRect();
+          smallBurst(r.left + r.width/2, r.top + r.height/2);
+          addScore(25, b);
+          fb.textContent = '✓ exactly that mistake';
+          fb.classList.remove('wrong');
+          i++;
+          setTimeout(load, 1100);
+        } else {
+          b.classList.add('wrong');
+          addScore(-4, b);
+          fb.textContent = '✗ no, not this one. Reread the quote — which mistake does it match?';
+          fb.classList.add('wrong');
+          setTimeout(() => b.classList.remove('wrong'), 600);
+        }
+      });
+      ansBox.appendChild(b);
+    });
+  }
+  ScrollTrigger.create({
+    trigger: '#cp6', start: 'top 60%', once: true,
+    onEnter: () => load()
+  });
+})();
+
+/* ============================================================
+   CP7 — Boss
+   ============================================================ */
+(function setupCp7() {
+  let answered = false;
+  document.querySelectorAll('#cp7 .answer-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (answered) return;
+      const ok = btn.dataset.correct === 'true';
+      const fb = document.getElementById('bossFeedback');
+      if (ok) {
+        answered = true;
+        btn.classList.add('correct');
+        const r = btn.getBoundingClientRect();
+        smallBurst(r.left + r.width/2, r.top + r.height/2);
+        setTimeout(fireworkExplosion, 200);
+        addScore(80, btn);
+        fb.textContent = '★ you read all three layers without falling into any trap';
+        fb.classList.remove('wrong');
+        unlockProgress(7);
+        setTimeout(() => {
+          document.getElementById('finale').scrollIntoView({ behavior: 'smooth' });
+          setTimeout(triggerFinale, 800);
+        }, 1500);
+      } else {
+        btn.classList.add('wrong');
+        addScore(-5, btn);
+        fb.classList.add('wrong');
+        fb.textContent = '✗ this interpretation falls into one of the typical mistakes. Try again.';
+        setTimeout(() => btn.classList.remove('wrong'), 600);
+      }
+    });
+  });
+})();
+
+/* ============================================================
+   FINALE
+   ============================================================ */
+let finaleFired = false;
+function triggerFinale() {
+  if (finaleFired) return;
+  finaleFired = true;
+  const finalEl = document.getElementById('finalScore');
+  const obj = { v: 0 };
+  gsap.to(obj, {
+    v: state.score, duration: 2.4, ease: 'power2.out',
+    onUpdate: () => { finalEl.textContent = Math.round(obj.v); }
+  });
+  gsap.to('.badge', {
+    opacity: 1, scale: 1, duration: 0.6,
+    ease: 'back.out(2)', stagger: 0.18, delay: 0.6
+  });
+  epicFinale();
+}
+ScrollTrigger.create({
+  trigger: '#finale', start: 'top 60%', once: true, onEnter: triggerFinale
+});
+
+document.getElementById('restartBtn').addEventListener('click', () => location.reload());
+
+/* ============================================================
+   FULLSCREEN TOGGLE
+   ============================================================ */
+(function setupFullscreen() {
+  const btn = document.getElementById('fullscreenBtn');
+  const tooltip = document.getElementById('fsTooltip');
+  const icon = document.getElementById('fsIcon');
+  const expandSVG = `
+    <polyline points="15 3 21 3 21 9"/>
+    <polyline points="9 21 3 21 3 15"/>
+    <line x1="21" y1="3" x2="14" y2="10"/>
+    <line x1="3" y1="21" x2="10" y2="14"/>`;
+  const compressSVG = `
+    <polyline points="4 14 10 14 10 20"/>
+    <polyline points="20 10 14 10 14 4"/>
+    <line x1="14" y1="10" x2="21" y2="3"/>
+    <line x1="3" y1="21" x2="10" y2="14"/>`;
+
+  btn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      const req = document.documentElement.requestFullscreen
+        || document.documentElement.webkitRequestFullscreen
+        || document.documentElement.mozRequestFullScreen;
+      if (req) req.call(document.documentElement);
+    } else {
+      const exit = document.exitFullscreen
+        || document.webkitExitFullscreen
+        || document.mozCancelFullScreen;
+      if (exit) exit.call(document);
+    }
+  });
+  function syncIcon() {
+    const isFs = !!document.fullscreenElement;
+    icon.innerHTML = isFs ? compressSVG : expandSVG;
+    tooltip.textContent = isFs ? 'Exit fullscreen' : 'Enter fullscreen';
+  }
+  document.addEventListener('fullscreenchange', syncIcon);
+  document.addEventListener('webkitfullscreenchange', syncIcon);
+  syncIcon();
+})();
+</script>
+</body>
+</html>
